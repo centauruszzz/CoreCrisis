@@ -9,6 +9,7 @@
 #include "task.hpp"
 
 #include <lib/rrc/encode.hpp>
+#include <ue/app/state_learner.hpp>
 #include <ue/rls/task.hpp>
 
 #include <asn/rrc/ASN_RRC_RRCReject.h>
@@ -163,9 +164,13 @@ void UeRrcTask::receiveRrcMessage(int cellId, ASN_RRC_DL_CCCH_Message *msg)
     switch (c1->present)
     {
     case ASN_RRC_DL_CCCH_MessageType__c1_PR_rrcReject:
+        if (state_learner->rrcFuzzing)
+            state_learner->notify_response("rrcReject");
         receiveRrcReject(cellId, *c1->choice.rrcReject);
         break;
     case ASN_RRC_DL_CCCH_MessageType__c1_PR_rrcSetup:
+        if (state_learner->rrcFuzzing)
+            state_learner->notify_response("rrcSetup");
         receiveRrcSetup(cellId, *c1->choice.rrcSetup);
         break;
     default:
@@ -182,9 +187,13 @@ void UeRrcTask::receiveRrcMessage(ASN_RRC_DL_DCCH_Message *msg)
     switch (c1->present)
     {
     case ASN_RRC_DL_DCCH_MessageType__c1_PR_dlInformationTransfer:
+        if (state_learner->rrcFuzzing)
+            state_learner->notify_response("dlInformationTransfer");
         receiveDownlinkInformationTransfer(*c1->choice.dlInformationTransfer);
         break;
     case ASN_RRC_DL_DCCH_MessageType__c1_PR_rrcRelease:
+        if (state_learner->rrcFuzzing)
+            state_learner->notify_response("rrcRelease");
         receiveRrcRelease(*c1->choice.rrcRelease);
         break;
     default:

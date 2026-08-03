@@ -23,14 +23,14 @@ RUN curl -fsSL https://pgp.mongodb.com/server-6.0.asc | \
 deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg] \
 https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | \
     tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
-    apt-get update && apt-get install -y mongodb-org && \
-    systemctl start mongod && systemctl enable mongod
+    apt-get update && apt-get install -y mongodb-org
 
 # Install Open5GS
 WORKDIR /corefuzzer_deps
-RUN git clone https://github.com/open5gs/open5gs /corefuzzer_deps/open5gs
+COPY open5gs /corefuzzer_deps/open5gs
 WORKDIR /corefuzzer_deps/open5gs
 RUN git checkout v2.6.6 && rm -rf install && mkdir install
+COPY prometheus-client-c /corefuzzer_deps/open5gs/prometheus-client-c
 RUN meson build --prefix=/ -Db_coverage=true && \
     ninja -C build
 RUN cd build && ninja install && cd .. && cp build/tests/app/5gc /usr/bin/
@@ -53,10 +53,13 @@ RUN apt-get install -y libcapture-tiny-perl libdatetime-perl libdevel-cover-perl
 RUN cpan App::cpanminus && cpanm Memory::Process
 
 # Install lcov
-RUN git clone https://github.com/linux-test-project/lcov.git \
-    /corefuzzer_deps/lcov
+COPY lcov /corefuzzer_deps/lcov
 WORKDIR /corefuzzer_deps/lcov
 RUN git checkout v2.2 && make install
 
+# Ensure MongoDB directories exist with proper permissions
+RUN mkdir -p /var/log/mongodb /var/lib/mongodb && \
+    chown -R mongodb:mongodb /var/log/mongodb /var/lib/mongodb
+
 WORKDIR /corefuzzer
-ENTRYPOINT systemctl start mongod && /bin/bash
+ENTRYPOINT mongod --fork --logpath /var/log/mongodb/mongod.log --dbpath /var/lib/mongodb && /bin/bash

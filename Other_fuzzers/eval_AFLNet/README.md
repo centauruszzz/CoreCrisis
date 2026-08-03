@@ -48,7 +48,7 @@ cd eval/aflnet-out
 # use the docker name used in step 3
 docker exec -it corefuzzer_aflnet_1a bash
 cd eval/aflnet-out
-AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 ../aflnet/afl-fuzz -d -n -i ../aflnet/tutorials/corefuzzer/in -o fuzzer -N tcp://127.0.0.1/13130 -w 1000 -W 4 -m 1G -K -P 5GC -D 10000 -q 3 -s 3 -E -R ../aflnet/nr-ue
+AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 AFL_SKIP_CPUFREQ=1 ../aflnet/afl-fuzz -d -n -i ../aflnet/tutorials/corefuzzer/in_rrc -o fuzzer -N tcp://127.0.0.1/13130 -w 1000 -W 4 -m 1G -K -P 5GC -D 10000 -q 3 -s 3 -E -R ../aflnet/nr-ue
 ```
 
 Note: If AFLNET is not running with some errors (No server states have been detected. Server responses are likely empty!),

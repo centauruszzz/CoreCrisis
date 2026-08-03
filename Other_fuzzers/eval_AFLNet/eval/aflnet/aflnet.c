@@ -2131,6 +2131,10 @@ enum {
   securityModeCommand,
   gmmStatus,
   dlNasTransport,
+  rrcSetup,
+  rrcReject,
+  dlInformationTransfer,
+  rrcRelease,
 };
 
 unsigned int message_code_5gc(unsigned char* buf, unsigned int buf_size)
@@ -2171,6 +2175,14 @@ unsigned int message_code_5gc(unsigned char* buf, unsigned int buf_size)
     return (unsigned int)gmmStatus;
   } else if (!strncmp(buf, "dlNasTransport", buf_size)) {
     return (unsigned int)dlNasTransport;
+  } else if (!strncmp(buf, "rrcSetup", buf_size)) {
+    return (unsigned int)rrcSetup;
+  } else if (!strncmp(buf, "rrcReject", buf_size)) {
+    return (unsigned int)rrcReject;
+  } else if (!strncmp(buf, "dlInformationTransfer", buf_size)) {
+    return (unsigned int)dlInformationTransfer;
+  } else if (!strncmp(buf, "rrcRelease", buf_size)) {
+    return (unsigned int)rrcRelease;
   }
   return 0;
 }

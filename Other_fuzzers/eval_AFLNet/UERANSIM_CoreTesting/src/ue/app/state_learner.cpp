@@ -346,6 +346,55 @@ void UeStateLearner::execute_command(std::string msg)
             break;
         }
 
+        // AFLNet: send a raw RRC message directly to the gNB without any decoding.
+        // Input format: aflnetRrcMessage_<hex>_<channel>
+        //   <hex>     : ASN.1-encoded RRC PDU (UL-CCCH / UL-CCCH1 / UL-DCCH)
+        //   <channel> : 5=UL_CCCH, 6=UL_CCCH1, 7=UL_DCCH (see rrc::RrcChannel)
+        case MsgType::aflnetRrcMessage:
+        {
+            std::cerr << "aflnetRrcMessage" << std::endl;
+            std::cerr << msg_str << " " << sub_str << std::endl;
+
+            size_t colon = sub_str.find(":");
+            if (colon == std::string::npos) {
+                notify_response("UNKNOWN");
+                break;
+            }
+
+            try {
+                // raw RRC PDU, sent as-is (no decode, no re-encode)
+                OctetString pdu = OctetString::FromHex(sub_str.substr(0, colon));
+                int channelVal = std::stoi(sub_str.substr(colon + 1));
+
+                if (channelVal < 0 || channelVal > 7) {
+                    notify_response("UNKNOWN");
+                    break;
+                }
+
+                // mark RRC raw fuzzing as active so RRC responses are relayed back
+                rrcFuzzing = true;
+
+                // push the raw RRC PDU directly to the RLS layer, bypassing the
+                // UE-side RRC ASN.1 encoding; the gNB decodes it on the other side
+                auto m = std::make_unique<NmUeRrcToRls>(NmUeRrcToRls::RRC_PDU_DELIVERY);
+                m->cellId = m_base->shCtx.currentCell.get<int>([](auto &value) { return value.cellId; });
+                m->channel = static_cast<rrc::RrcChannel>(channelVal);
+                m->pduId = 0;
+                m->pdu = std::move(pdu);
+                m_base->rlsTask->push(std::move(m));
+
+                notify_response("OK");
+            } catch (std::runtime_error const &ex) {
+                notify_response("UNKNOWN");
+            } catch (std::invalid_argument const &ex) {
+                notify_response("UNKNOWN");
+            } catch (std::out_of_range const &ex) {
+                notify_response("UNKNOWN");
+            }
+
+            break;
+        }
+
         default:
             std::cout << "Unknown message name" << std::endl;
             notify_response("Unknown message name");

@@ -32,6 +32,7 @@ enum class MsgType
     testMessage,
     rawMessage,
     aflnetMessage,
+    aflnetRrcMessage,
 };
 
 enum class ShtType
@@ -99,6 +100,7 @@ class UeStateLearner
         {"testMessage"                , MsgType::testMessage                },
         {"rawMessage"                 , MsgType::rawMessage                 },
         {"aflnetMessage"              , MsgType::aflnetMessage              },
+        {"aflnetRrcMessage"           , MsgType::aflnetRrcMessage           },
     };
 
     std::unordered_map<std::string, ShtType> shtMap = 
@@ -153,6 +155,8 @@ class UeStateLearner
 
     // flag for enable fuzzing
     bool enableFuzzing = false;
+    // flag to indicate RRC raw fuzzing is active (for response feedback gating)
+    bool rrcFuzzing = false;
     response_t* response;
     // for reproduce fuzzing message
     int control_sht = 0;
