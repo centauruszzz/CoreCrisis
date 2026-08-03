@@ -7,7 +7,7 @@ build: FORCE
 	rm -fr build/*
 	
 
-	cmake -DCMAKE_BUILD_TYPE=Release -G "CodeBlocks - Unix Makefiles" . -B cmake-build-release
+	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="--coverage -g" -DCMAKE_CXX_FLAGS="--coverage -g" -DCMAKE_EXE_LINKER_FLAGS="--coverage" -DCMAKE_SHARED_LINKER_FLAGS="--coverage" -G "CodeBlocks - Unix Makefiles" . -B cmake-build-release
 	cmake --build cmake-build-release --target all
 	
 	cp cmake-build-release/nr-gnb build/
@@ -25,6 +25,16 @@ build: FORCE
 	# cp cmake-build-debug/libdevbnd.so build/
 	# cp tools/nr-binder build/
 
-	@printf "${GREEN}UERANSIM successfully built.${NC}\n"
+	@printf "${GREEN}UERANSIM successfully built with coverage support.${NC}\n"
+
+# Reset gcov counters before a fresh fuzzing/capture session
+coverage-reset:
+	lcov --zerocounters --directory cmake-build-release
+
+# Capture coverage from the instrumented binaries and generate an HTML report
+coverage: FORCE
+	lcov --capture --directory cmake-build-release --output-file build/coverage.info --rc lcov_branch_coverage=1
+	genhtml build/coverage.info --branch-coverage --output-directory build/coverage-report
+	@printf "${GREEN}Coverage report: build/coverage-report/index.html${NC}\n"
 
 FORCE:
