@@ -40,23 +40,11 @@ RUN meson build --prefix=/ -Db_coverage=true && \
 RUN cd build && ninja install && cd .. && cp build/tests/app/5gc /usr/bin/
 COPY sample.yaml /corefuzzer_deps/open5gs/build/configs/sample.yaml
 
-# Install UERANSIM (compiled with gcov/--coverage so the gNB (nr-gnb) coverage can be captured)
+# Install UERANSIM
 WORKDIR /corefuzzer_deps
 COPY UERANSIM_CoreTesting /corefuzzer_deps/ueransim
 WORKDIR /corefuzzer_deps/ueransim
-RUN mkdir -p build && rm -fr build/* && \
-    cmake -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_C_FLAGS="-g --coverage" \
-          -DCMAKE_CXX_FLAGS="-g --coverage" \
-          -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
-          -G "CodeBlocks - Unix Makefiles" . -B cmake-build-release && \
-    cmake --build cmake-build-release --target all -j`nproc` && \
-    cp cmake-build-release/nr-gnb build/ && \
-    cp cmake-build-release/nr-ue build/ && \
-    cp cmake-build-release/nr-cli build/ && \
-    cp cmake-build-release/libdevbnd.so build/ && \
-    cp tools/nr-binder build/ && \
-    cp build/nr-* /usr/bin/
+RUN make -j`nproc` && cp build/nr-* /usr/bin/
 
 # Install CoreFuzzer dependencies
 COPY requirements.txt /corefuzzer/requirements.txt
