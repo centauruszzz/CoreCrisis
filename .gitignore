@@ -1,2 +1,3 @@
 .vscode
 .idea
+Other_fuzzers/eval_AFLNet/eval/aflnet/docs/vuln_samples/msie-tiff-mem-leak.tif

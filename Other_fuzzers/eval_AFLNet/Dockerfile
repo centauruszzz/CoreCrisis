@@ -32,7 +32,7 @@ https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | \
 
 # Install Open5GS
 WORKDIR /corefuzzer_deps
-RUN git clone https://github.com/open5gs/open5gs /corefuzzer_deps/open5gs
+COPY open5gs /corefuzzer_deps/open5gs
 WORKDIR /corefuzzer_deps/open5gs
 RUN git checkout v2.6.6 && rm -rf install && mkdir install
 RUN meson build --prefix=/ -Db_coverage=true && \
@@ -57,8 +57,7 @@ RUN apt-get install -y libcapture-tiny-perl libdatetime-perl libdevel-cover-perl
 RUN cpan App::cpanminus && cpanm Memory::Process
 
 # Install lcov
-RUN git clone https://github.com/linux-test-project/lcov.git \
-    /corefuzzer_deps/lcov
+COPY lcov /corefuzzer_deps/lcov
 WORKDIR /corefuzzer_deps/lcov
 RUN git checkout v2.2 && make install
 
