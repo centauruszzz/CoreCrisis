@@ -34,7 +34,7 @@ coverage-reset:
 # Capture coverage from the instrumented binaries and generate an HTML report
 coverage: FORCE
 	lcov --capture --directory cmake-build-release --output-file build/coverage.info --rc lcov_branch_coverage=1
-	genhtml build/coverage.info --branch-coverage --output-directory build/coverage-report
+	genhtml build/coverage.info --output-directory build/coverage-report --rc lcov_branch_coverage=1
 	@printf "${GREEN}Coverage report: build/coverage-report/index.html${NC}\n"
 
 FORCE:

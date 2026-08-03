@@ -3,6 +3,7 @@
 #include <lib/nas/utils.hpp>
 #include <ue/nas/task.hpp>
 #include <ue/rrc/task.hpp>
+#include <ue/rls/task.hpp>
 #include <pthread.h>
 #include <netinet/in.h>
 #include <unistd.h>
