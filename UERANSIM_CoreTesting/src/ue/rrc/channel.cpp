@@ -14,93 +14,10 @@
 #include <asn/rrc/ASN_RRC_RRCReject.h>
 #include <asn/rrc/ASN_RRC_RRCSetup.h>
 #include <asn/rrc/ASN_RRC_UL-CCCH-Message.h>
-#include <asn/rrc/ASN_RRC_UL-CCCH1-Message.h>
 #include <asn/rrc/ASN_RRC_UL-DCCH-Message.h>
-
-#include <sys/stat.h>
-#include <fstream>
-#include <mutex>
 
 namespace nr::ue
 {
-
-static constexpr const char *RRC_PDU_OUTPUT_DIR = "../aflnet/tutorials/corefuzzer/in2";
-static std::mutex g_saveMutex;
-
-static const char *GetUlCcchMessageName(const ASN_RRC_UL_CCCH_Message *msg)
-{
-    if (msg->message.present == ASN_RRC_UL_CCCH_MessageType_PR_c1)
-    {
-        switch (msg->message.choice.c1->present)
-        {
-        case ASN_RRC_UL_CCCH_MessageType__c1_PR_rrcSetupRequest:            return "rrcSetupRequest";
-        case ASN_RRC_UL_CCCH_MessageType__c1_PR_rrcResumeRequest:           return "rrcResumeRequest";
-        case ASN_RRC_UL_CCCH_MessageType__c1_PR_rrcReestablishmentRequest:  return "rrcReestablishmentRequest";
-        case ASN_RRC_UL_CCCH_MessageType__c1_PR_rrcSystemInfoRequest:       return "rrcSystemInfoRequest";
-        default: break;
-        }
-    }
-    return "unknown_ul_ccch";
-}
-
-static const char *GetUlCcch1MessageName(const ASN_RRC_UL_CCCH1_Message *msg)
-{
-    if (msg->message.present == ASN_RRC_UL_CCCH1_MessageType_PR_c1)
-    {
-        switch (msg->message.choice.c1->present)
-        {
-        case ASN_RRC_UL_CCCH1_MessageType__c1_PR_rrcResumeRequest1: return "rrcResumeRequest1";
-        default: break;
-        }
-    }
-    return "unknown_ul_ccch1";
-}
-
-static const char *GetUlDcchMessageName(const ASN_RRC_UL_DCCH_Message *msg)
-{
-    if (msg->message.present == ASN_RRC_UL_DCCH_MessageType_PR_c1)
-    {
-        switch (msg->message.choice.c1->present)
-        {
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_measurementReport:             return "measurementReport";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_rrcReconfigurationComplete:    return "rrcReconfigurationComplete";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_rrcSetupComplete:              return "rrcSetupComplete";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_rrcReestablishmentComplete:    return "rrcReestablishmentComplete";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_rrcResumeComplete:             return "rrcResumeComplete";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_securityModeComplete:          return "securityModeComplete";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_securityModeFailure:           return "securityModeFailure";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_ulInformationTransfer:         return "ulInformationTransfer";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_locationMeasurementIndication: return "locationMeasurementIndication";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_ueCapabilityInformation:       return "ueCapabilityInformation";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_counterCheckResponse:          return "counterCheckResponse";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_ueAssistanceInformation:       return "ueAssistanceInformation";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_failureInformation:            return "failureInformation";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_ulInformationTransferMRDC:     return "ulInformationTransferMRDC";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_scgFailureInformation:         return "scgFailureInformation";
-        case ASN_RRC_UL_DCCH_MessageType__c1_PR_scgFailureInformationEUTRA:    return "scgFailureInformationEUTRA";
-        default: break;
-        }
-    }
-    return "unknown_ul_dcch";
-}
-
-static void SaveRrcPdu(const OctetString &pdu, int channel, const char *msgName)
-{
-    // Ensure output directory exists
-    mkdir(RRC_PDU_OUTPUT_DIR, 0755);
-
-    std::lock_guard<std::mutex> lock(g_saveMutex);
-
-    std::string filename = std::string(RRC_PDU_OUTPUT_DIR) + "/" + msgName;
-
-    std::ofstream outFile(filename);
-    if (!outFile.is_open())
-        return;
-
-    // Write format: aflnetRrcMessage_<hex_pdu>:<channel>
-    outFile << "aflnetRrcMessage_" << pdu.toHexString() << ":" << channel;
-    outFile.close();
-}
 
 void UeRrcTask::handleDownlinkRrc(int cellId, rrc::RrcChannel channel, const OctetString &rrcPdu)
 {
@@ -176,8 +93,6 @@ void UeRrcTask::sendRrcMessage(int cellId, ASN_RRC_UL_CCCH_Message *msg)
         return;
     }
 
-    SaveRrcPdu(pdu, static_cast<int>(rrc::RrcChannel::UL_CCCH), GetUlCcchMessageName(msg));
-
     auto m = std::make_unique<NmUeRrcToRls>(NmUeRrcToRls::RRC_PDU_DELIVERY);
     m->cellId = cellId;
     m->channel = rrc::RrcChannel::UL_CCCH;
@@ -194,8 +109,6 @@ void UeRrcTask::sendRrcMessage(int cellId, ASN_RRC_UL_CCCH1_Message *msg)
         return;
     }
 
-    SaveRrcPdu(pdu, static_cast<int>(rrc::RrcChannel::UL_CCCH1), GetUlCcch1MessageName(msg));
-
     auto m = std::make_unique<NmUeRrcToRls>(NmUeRrcToRls::RRC_PDU_DELIVERY);
     m->cellId = cellId;
     m->channel = rrc::RrcChannel::UL_CCCH1;
@@ -211,8 +124,6 @@ void UeRrcTask::sendRrcMessage(ASN_RRC_UL_DCCH_Message *msg)
         m_logger->err("RRC UL-DCCH encoding failed.");
         return;
     }
-
-    SaveRrcPdu(pdu, static_cast<int>(rrc::RrcChannel::UL_DCCH), GetUlDcchMessageName(msg));
 
     auto m = std::make_unique<NmUeRrcToRls>(NmUeRrcToRls::RRC_PDU_DELIVERY);
     m->cellId = m_base->shCtx.currentCell.get<int>([](auto &value) { return value.cellId; });
