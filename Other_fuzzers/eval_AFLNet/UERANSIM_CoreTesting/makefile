@@ -7,7 +7,7 @@ build: FORCE
 	rm -fr build/*
 	
 
-	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="--coverage -g" -DCMAKE_CXX_FLAGS="--coverage -g" -DCMAKE_EXE_LINKER_FLAGS="--coverage" -DCMAKE_SHARED_LINKER_FLAGS="--coverage" -G "CodeBlocks - Unix Makefiles" . -B cmake-build-release
+	cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-g -fsanitize=address" -DCMAKE_CXX_FLAGS="-g -fsanitize=address" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" -G "CodeBlocks - Unix Makefiles" . -B cmake-build-release
 	cmake --build cmake-build-release --target all
 	
 	cp cmake-build-release/nr-gnb build/
